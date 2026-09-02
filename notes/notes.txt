@@ -1,0 +1,9 @@
+
+<!------------------------------------------------------------------------------------------!>
+
+inspect is an python module that provides several useful functions to help get information 
+about live objects such as modules, classes, methods, functions, tracebacks, frame objects,
+and code objects.
+
+1. sigenature() gets the parameters of functions and methods.
+2. getsource() gets the source/whole code of functions and methods.
