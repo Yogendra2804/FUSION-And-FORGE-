@@ -1,0 +1,12 @@
+﻿__pycache__/
+*.pyc
+*.pyo
+.env
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# personal context file, not for the repo
+Forge + Placement + Learning Context * Full Handoff.md
