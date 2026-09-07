@@ -25,7 +25,7 @@ def ast(code):
             data.append({
                 "type": "function",
                 "name": word,
-                "inner_code" : code[idx:]
+                "inner_code" : ast(code[idx+1:])
             })
             word = ""
             
@@ -34,7 +34,7 @@ def ast(code):
             data.append({
                 "type": "function",
                 "name": word,
-                "inner_code" : code[idx:]
+                "inner_code" : ast(code[idx+1:])
             })
             word = ""
 
@@ -42,10 +42,14 @@ def ast(code):
             data.append({
                 "type": "function",
                 "name": word,
-                "inner_code" : code[idx:]
+                "inner_code" : ast(code[idx+1:])
             })
             word = ""
 
     return data
 
 print(ast('java("Collections.sort(arr)")'))
+
+
+# Main problem in this apporach .. not keeping the track of '(' and ')' for causing either
+#   recursing limit reach error or faulty siblings being created insted of childs. 
