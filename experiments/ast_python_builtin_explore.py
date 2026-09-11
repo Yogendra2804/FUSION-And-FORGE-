@@ -1,6 +1,6 @@
 import ast
 
-code = 'java("Collections.sort(arr)")'
+code = '2 + 3 * (4 + 5)'
 
 tree = ast.parse(code)
 
