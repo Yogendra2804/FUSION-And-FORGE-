@@ -1,4 +1,4 @@
-from tokenization_approach2 import tokenization
+from tokenization_approach3 import tokenization
 
 class Parser:
     def __init__(self, tokens):
@@ -74,9 +74,19 @@ class Parser:
         return left
 
     def parse_bitwise(self):
-        left = self.parse_additive()
+        left = self.parse_comparison()
         
         while self.current()[0] == "BINAROP":
+            op = self.consume()
+            right = self.parse_comparison()
+            left = {"type": "BinaryExpression", "operator": op[1], "left": left, "right": right}
+            
+        return left
+
+    def parse_comparison(self):
+        left = self.parse_additive()
+        
+        while self.current()[0] in ["EQ", "NEQ", "LT", "LTE", "GT", "GTE"]:
             op = self.consume()
             right = self.parse_additive()
             left = {"type": "BinaryExpression", "operator": op[1], "left": left, "right": right}
@@ -105,8 +115,8 @@ class Parser:
         return left
 
     def parse_unary(self):
-        # Unary operators like ! (NOT) or - (MINUS)
-        if self.current()[0] in ["NOT", "MINUS"]:
+        # Unary operators like ! (NOT), - (MINUS), ++, or --
+        if self.current()[0] in ["NOT", "MINUS", "INCREMENT", "DECREMENT"]:
             op = self.consume()
             operand = self.parse_unary()
             return {"type": "UnaryExpression", "operator": op[1], "operand": operand}
@@ -136,6 +146,12 @@ class Parser:
                 self.consume("RPAREN")
                 node = {"type": "CallExpression", "callee": node, "arguments": args}
                 
+        # Check for postfix ++ or --
+        if self.current()[0] in ["INCREMENT", "DECREMENT"]:
+            op = self.consume()
+            node = {"type": "PostfixExpression", "operator": op[1], "operand": node}
+            
+                
         return node
 
     def parse_primary(self):
@@ -146,9 +162,9 @@ class Parser:
             val = float(token[1]) if token[0] == "FLOAT" else int(token[1])
             return {"type": "Literal", "value": val}
             
-        elif token[0] == "STRING":
+        elif token[0] in ["STRING", "CHAR"]:
             self.consume()
-            return {"type": "StringLiteral", "value": token[1]}
+            return {"type": "Literal", "value": token[1]}
             
         elif token[0] in ["BOOLEAN TRUE", "BOOLEAN FALSE"]:
             self.consume()
@@ -174,7 +190,7 @@ def build_ast(code):
     return parser.parse()
 
 if __name__ == "__main__":
-    test_code = input("Enter code to parse: ")
+    test_code = "java(x == 10 && x != 5);"
     print("Input:", test_code)
     print("\nAST Tree:")
     import json
