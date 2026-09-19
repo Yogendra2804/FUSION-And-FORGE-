@@ -3,18 +3,21 @@ class TokenizerError(Exception):
 
 def tokenization(code):
     KEYWORDS = {
-        "int": "INT",
-        "float": "FLOAT",
-        "double": "DOUBLE",
-        "boolean": "BOOLEAN",
-        "true": "BOOLEAN TRUE",
-        "false": "BOOLEAN FALSE",
-        "char": "CHAR",
-        "String": "STRING",
-        "return": "RETURN",
-        "if": "IF",
-        "else": "ELSE",
-        "while": "WHILE"
+        # type keywords — prefixed so they don't clash with INT/FLOAT literal token types
+        "int":     "TYPE_INT",
+        "float":   "TYPE_FLOAT",
+        "double":  "TYPE_DOUBLE",
+        "boolean": "TYPE_BOOLEAN",
+        "char":    "TYPE_CHAR",
+        "String":  "TYPE_STRING",
+        # value keywords
+        "true":    "BOOLEAN_TRUE",
+        "false":   "BOOLEAN_FALSE",
+        # control-flow keywords
+        "return":  "RETURN",
+        "if":      "IF",
+        "else":    "ELSE",
+        "while":   "WHILE",
     }
 
     EXTRA = {
@@ -122,8 +125,17 @@ def tokenization(code):
             if i >= len(code):
                 raise TokenizerError(f"Unterminated char at line {current_line}, col {current_col}")
             
-            if len(word) != 1:
-                raise TokenizerError(f"Invalid character literal '{word}' at line {current_line}, col {current_col}")
+            if len(word) == 0:
+                raise TokenizerError(
+                    f"Empty character literal at line {current_line}, col {current_col} — "
+                    f"char needs exactly one character, e.g. 'a'"
+                )
+            if len(word) > 1:
+                raise TokenizerError(
+                    f"Invalid character literal '{word}' at line {current_line}, col {current_col} — "
+                    f"single quotes are for char (one character only). "
+                    f"Did you mean \"{word}\" (double quotes for strings)?"
+                )
             
             advance() # skip closing '
             tokens.append(["CHAR", word, current_line, current_col])

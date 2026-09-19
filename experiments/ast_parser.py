@@ -1,4 +1,7 @@
-from tokenization_approach3 import tokenization
+from tokenization_approach3 import tokenization, TokenizerError
+
+class ParseError(Exception):
+    pass
 
 class Parser:
     def __init__(self, tokens):
@@ -8,12 +11,24 @@ class Parser:
     def current(self):
         if self.pos < len(self.tokens):
             return self.tokens[self.pos]
-        return ["EOF", ""]
+        return ["EOF", "", -1, -1]
 
     def consume(self, expected_type=None):
         token = self.current()
         if expected_type and token[0] != expected_type:
-            raise Exception(f"Expected {expected_type} but got {token[0]} '{token[1]}'")
+            # give a more human-readable message depending on what was missing
+            if token[0] == "EOF":
+                if expected_type == "RPAREN":
+                    raise ParseError("Unclosed parenthesis — missing ')' at end of input")
+                elif expected_type == "IDENTIFIER":
+                    raise ParseError("Expected a variable name but reached end of input")
+                else:
+                    raise ParseError(f"Unexpected end of input — expected '{expected_type}'")
+            else:
+                loc = f"line {token[2]}, col {token[3]}" if token[2] != -1 else "unknown position"
+                raise ParseError(
+                    f"Unexpected token '{token[1]}' at {loc} — expected {expected_type}"
+                )
         self.pos += 1
         return token
 
@@ -29,13 +44,37 @@ class Parser:
         return {"type": "Program", "body": body}
 
     def parse_statement(self):
-        # right now just assuming everything is an expression or assignment
+        tok = self.current()
+
+        # variable declaration: int x = 9; or boolean flag;
+        TYPE_KEYWORDS = ["TYPE_INT", "TYPE_FLOAT", "TYPE_DOUBLE",
+                         "TYPE_BOOLEAN", "TYPE_CHAR", "TYPE_STRING"]
+
+        if tok[0] in TYPE_KEYWORDS:
+            type_tok = self.consume()           # consume the type keyword
+            name_tok = self.consume("IDENTIFIER")  # must be followed by a name
+
+            init = None
+            if self.current()[0] == "ASSIGNMENT":
+                self.consume("ASSIGNMENT")
+                init = self.parse_expression()
+
+            if self.current()[0] == "SEMICOLON":
+                self.consume("SEMICOLON")
+
+            return {
+                "type":     "VarDeclaration",
+                "var_type": type_tok[1],   # "int", "float", etc.
+                "name":     name_tok[1],
+                "init":     init
+            }
+
+        # everything else is an expression statement
         expr = self.parse_expression()
-        
-        # optional semicolon at the end
+
         if self.current()[0] == "SEMICOLON":
             self.consume("SEMICOLON")
-            
+
         return {"type": "ExpressionStatement", "expression": expr}
 
     def parse_expression(self):
@@ -74,19 +113,29 @@ class Parser:
         return left
 
     def parse_bitwise(self):
-        left = self.parse_comparison()
+        left = self.parse_equality()
         
         while self.current()[0] == "BINAROP":
             op = self.consume()
-            right = self.parse_comparison()
+            right = self.parse_equality()
             left = {"type": "BinaryExpression", "operator": op[1], "left": left, "right": right}
             
         return left
 
-    def parse_comparison(self):
+    def parse_equality(self):
+        left = self.parse_relational()
+        
+        while self.current()[0] in ["EQ", "NEQ"]:
+            op = self.consume()
+            right = self.parse_relational()
+            left = {"type": "BinaryExpression", "operator": op[1], "left": left, "right": right}
+            
+        return left
+
+    def parse_relational(self):
         left = self.parse_additive()
         
-        while self.current()[0] in ["EQ", "NEQ", "LT", "LTE", "GT", "GTE"]:
+        while self.current()[0] in ["LT", "LTE", "GT", "GTE"]:
             op = self.consume()
             right = self.parse_additive()
             left = {"type": "BinaryExpression", "operator": op[1], "left": left, "right": right}
@@ -166,9 +215,9 @@ class Parser:
             self.consume()
             return {"type": "Literal", "value": token[1]}
             
-        elif token[0] in ["BOOLEAN TRUE", "BOOLEAN FALSE"]:
+        elif token[0] in ["BOOLEAN_TRUE", "BOOLEAN_FALSE"]:
             self.consume()
-            return {"type": "Literal", "value": (token[0] == "BOOLEAN TRUE")}
+            return {"type": "Literal", "value": (token[0] == "BOOLEAN_TRUE")}
             
         elif token[0] == "IDENTIFIER":
             self.consume()
@@ -182,7 +231,11 @@ class Parser:
             return expr
             
         else:
-            raise Exception(f"idk what to do with this token: {token}")
+            tok = self.current()
+            if tok[0] == "EOF":
+                raise ParseError("Unexpected end of input — expected an expression")
+            loc = f"line {tok[2]}, col {tok[3]}"
+            raise ParseError(f"Unexpected token '{tok[1]}' at {loc} — expected an expression")
 
 def build_ast(code):
     tokens = tokenization(code)
@@ -190,11 +243,14 @@ def build_ast(code):
     return parser.parse()
 
 if __name__ == "__main__":
-    test_code = "java(x == 10 && x != 5);"
+    test_code = input("Enter code to parse: ")
     print("Input:", test_code)
     print("\nAST Tree:")
     import json
-    tree = build_ast(test_code)
-    print(json.dumps(tree, indent=2))
-
-#  2 + 3 * (4 + 5)
+    try:
+        tree = build_ast(test_code)
+        print(json.dumps(tree, indent=2))
+    except TokenizerError as e:
+        print(f"\nForge Tokenizer Error: {e}")
+    except ParseError as e:
+        print(f"\nForge Parse Error: {e}")
