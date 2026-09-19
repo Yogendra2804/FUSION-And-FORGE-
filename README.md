@@ -138,14 +138,14 @@ Keywords and operators are represented through lookup structures so that the lex
 
 ```python
 KEYWORDS = {
-    "int": "INT",
-    "float": "FLOAT",
-    "double": "DOUBLE",
-    "boolean": "BOOLEAN",
-    "true": "BOOLEAN TRUE",
-    "false": "BOOLEAN FALSE",
-    "char": "CHAR",
-    "String": "STRING",
+    "int": "TYPE_INT",
+    "float": "TYPE_FLOAT",
+    "double": "TYPE_DOUBLE",
+    "boolean": "TYPE_BOOLEAN",
+    "true": "BOOLEAN_TRUE",
+    "false": "BOOLEAN_FALSE",
+    "char": "TYPE_CHAR",
+    "String": "TYPE_STRING",
     "return": "RETURN",
     "if": "IF",
     "else": "ELSE",
@@ -305,25 +305,24 @@ This separation is important because syntax and execution are different problems
 - [x] Runtime frame inspection experiments
 - [x] Caller-local variable resolution
 - [x] Identifier discovery from source
-- [x] Tokenization prototype
-  - [x] Keyword recognition
+- [x] Tokenization prototype (v3 with line/column tracking)
+  - [x] Keyword recognition (types, control flow, booleans)
   - [x] Operator recognition
-  - [x] Integer literals
-  - [x] Floating-point literals
-  - [x] Boolean literals
-  - [x] String literals
+  - [x] Integer and floating-point literals
+  - [x] String and character literals (with nice errors for empty chars etc)
   - [x] Parentheses and nested-expression handling
+- [x] Formal AST structure (class-based tree representation)
+- [x] Basic parser (handles expressions, assignments, precedence, and variable declarations)
+- [x] Forge-specific error reporting (ParseError and TokenizerError with locations)
 
 ### 🔄 Currently being developed
 
-- [ ] Robust parser
-- [ ] Formal AST structure
+- [ ] Control Flow parsing (if/else, while)
 - [ ] Semantic analysis
 - [ ] Runtime environment
 - [ ] Operation dispatch
 - [ ] Java-like library abstractions
 - [ ] Execution engine
-- [ ] Forge-specific error reporting
 - [ ] Test suite
 - [ ] Integrated V0
 
