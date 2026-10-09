@@ -4,11 +4,11 @@
 
 **FUSION-And-FORGE** is an experimental language-processing and runtime project exploring whether Java-like syntax can be interpreted and executed within a Python environment.
 
-The project started from a simple problem:
+The project started from a simple problem :
 
 > What if you remember how to solve something in another programming language, but don’t remember the exact syntax required to express it in Python?
 
-For example:
+For examples:
 
 ```python
 arr = [3, 1, 2]
